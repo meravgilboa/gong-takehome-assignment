@@ -96,11 +96,9 @@ public class CalendarService {
                 .toList();
 
         if (personList.isEmpty()) {
-            System.out.println("No person found");
             return Collections.emptyList();
         }
         if (eventDuration.isNegative() || eventDuration.isZero()) {
-            System.err.println("Event duration is invalid");
             return Collections.emptyList();
         }
         boolean[][] availability = createAvailabilityMatrix(personList);
