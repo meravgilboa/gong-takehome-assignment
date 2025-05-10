@@ -3,15 +3,14 @@ package io.gong;
 import io.gong.model.Event;
 import io.gong.model.PersonCalendar;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.IntStream;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 /**
  * Service to manage calendar operations including finding available meeting slots
  * for multiple participants.
@@ -31,65 +30,56 @@ public class CalendarService {
      * @param resourcePath Path to the CSV file within the classpath
      * @throws IOException If an I/O error occurs reading from the file
      */
-    public void loadEvents(String resourcePath) throws IOException {
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-            if (inputStream == null) {
-                throw new IOException("Resource not found: " + resourcePath);
+    public void loadEvents(String filePath) throws IOException {
+        InputStream inputStream;
+
+        // First try to load as a classpath resource
+        inputStream = getClass().getClassLoader().getResourceAsStream(filePath);
+
+        // If not found in classpath, try as a regular file
+        if (inputStream == null) {
+            try {
+                inputStream = new FileInputStream(filePath);
+            } catch (FileNotFoundException e) {
+                throw new IOException("File not found: " + filePath);
+            }
+        }
+
+        try (InputStream is = inputStream) {
+            if (is == null) {
+                throw new IOException("Resource not found: " + filePath);
             }
 
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    try {
-                        String[] parts = parseCSVLine(line);
-                        if (parts.length < NUM_OF_CSV_FIELDS) {
-                            System.err.println("Skipping invalid line: " + line);
-                            continue;
-                        }
+            CSVParser parser = CSVFormat.DEFAULT
+                    .builder()
+                    .setIgnoreEmptyLines(true)
+                    .setTrim(true)
+                    .setQuote('"')
+                    .build()
+                    .parse(new InputStreamReader(is));
 
-                        String personName = parts[0].trim();
-                        String subject = parts[1].trim();
-                        LocalTime startTime = LocalTime.parse(parts[2].trim());
-                        LocalTime endTime = LocalTime.parse(parts[3].trim());
+            // Rest of your parsing code remains the same
+            for (CSVRecord record : parser) {
+                // Existing parsing logic...
+                if (record.size() < NUM_OF_CSV_FIELDS) {
+                    System.err.println("Skipping invalid record: " + record);
+                    continue;
+                }
 
-                        Event event = new Event(subject, startTime, endTime);
+                try {
+                    String personName = record.get(0);
+                    String subject = record.get(1);
+                    LocalTime startTime = LocalTime.parse(record.get(2));
+                    LocalTime endTime = LocalTime.parse(record.get(3));
 
-                        // Get or create the person's calendar and add the event
-                        personCalendars.computeIfAbsent(personName, PersonCalendar::new)
-                                .addEvent(event);
-                    } catch (Exception e) {
-                        System.err.println("Error processing line: " + line + " - " + e.getMessage());
-                        throw e;
-                    }
+                    Event event = new Event(subject, startTime, endTime);
+                    personCalendars.computeIfAbsent(personName, PersonCalendar::new)
+                            .addEvent(event);
+                } catch (Exception e) {
+                    System.err.println("Error processing record: " + record + " - " + e.getMessage());
                 }
             }
         }
-    }
-
-    /**
-     * Parse CSV line with proper handling of quoted fields
-     */
-    private String[] parseCSVLine(String line) {
-        List<String> result = new ArrayList<>();
-        boolean inQuotes = false;
-        StringBuilder field = new StringBuilder();
-
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == ',' && !inQuotes) {
-                result.add(field.toString());
-                field = new StringBuilder();
-            } else {
-                field.append(c);
-            }
-        }
-
-        // Add the last field
-        result.add(field.toString());
-        return result.toArray(new String[0]);
     }
 
     /**
@@ -127,8 +117,9 @@ public class CalendarService {
     private List<LocalTime> findAvailableTimeSlots(boolean[][] availability, Duration eventDuration) {
         int requiredDuration = (int) eventDuration.toMinutes();
         List<LocalTime> availableSlots = new ArrayList<>();
+        int  maxStartMinute = WORK_DAY_MINUTES - requiredDuration;
 
-        for (int minute = 0; minute < WORK_DAY_MINUTES - requiredDuration; minute++) {
+        for (int minute = 0; minute < maxStartMinute; minute++) {
             if (isTimeSlotAvailable(availability, minute, requiredDuration)) {
                 availableSlots.add(START_WORK_DAY.plusMinutes(minute));
                 minute += requiredDuration - 1; // Skip to the end of the slot
@@ -213,5 +204,9 @@ public class CalendarService {
                 availability[personIndex][minute] = true;
             }
         }
+    }
+
+    public List<String> getAvailablePeople() {
+        return personCalendars.keySet().stream().toList();
     }
 }
