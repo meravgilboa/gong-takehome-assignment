@@ -142,14 +142,10 @@ public class CalendarService {
      * @return true if everyone is available, false otherwise
      */
     private boolean isTimeSlotAvailable(boolean[][] availability, int startMinute, int duration) {
-        for (boolean[] booleans : availability) {
-            for (int minute = 0; minute < duration; minute++) {
-                if (booleans[startMinute + minute]) {
-                    return false; // Someone is busy during this time
-                }
-            }
-        }
-        return true; // Everyone is available for the entire duration
+        return Arrays.stream(availability)
+                .noneMatch(personAvailability ->
+                        IntStream.range(0, duration)
+                                .anyMatch(minute -> personAvailability[startMinute + minute]));
     }
 
     /**
