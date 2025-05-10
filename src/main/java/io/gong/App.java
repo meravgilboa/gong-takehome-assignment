@@ -3,6 +3,7 @@ package io.gong;
 /**
  * This is the App entry point
  */
+
 public class App {
 
     public static void main(String[] args) {

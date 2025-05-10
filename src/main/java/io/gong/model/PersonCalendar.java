@@ -8,11 +8,11 @@ import java.util.List;
 @Data
 public class PersonCalendar {
 
-    private String personName;
+    private String name;
     private List<Event> events;
 
-    public PersonCalendar(String personName) {
-        this.personName = personName;
+    public PersonCalendar(String name) {
+        this.name = name;
         this.events = new ArrayList<>();
     }
 
