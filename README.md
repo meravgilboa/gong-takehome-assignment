@@ -1,233 +1,88 @@
-Gong.io Calendar Availability Service
+# Gong.io Calendar Availability Service
 
-Gong.io Take Home Exercise
+## Overview
+The Calendar Availability Service is a Java application that helps find available meeting slots for a group of people based on their existing calendar events. Given a list of participants and a desired meeting duration, the service identifies all possible time slots during a workday when everyone is available.
 
-This take home exercise is used to determine how you go about solving problems logically, as well as building out simple and clear code.
 
-What is the exercise?
+### Implementation Approach
+I implemented a Boolean Timeline approach that represents the workday (07:00-19:00) as a 720-minute timeline. For each person, a boolean array marks busy minutes as true. The system then performs logical operations across all participants' timelines to find common available slots.
 
-You will be creating a simple calendar with one really cool feature: Given a list of people and a desired duration, find all the time slots in a day in which all persons are available to meet.
 
-The input data is provided to you in a simple comma-separated values file (calendar.csv) and is structured in the following way:
+<img width="496" alt="צילום מסך 2025-05-10 ב-23 33 02" src="https://github.com/user-attachments/assets/9ead26f1-8019-4189-a1b6-b1fee9fee81b" />
 
-Person name, Event subject, Event start time, Event end time
 
-Goals
+#### The service:
+Loads events from a CSV file into PersonCalendar objects
+Converts each person's events into a boolean array (true = busy, false = available)
+Performs logical AND operations across all participants' arrays
+Identifies consecutive available slots of the requested duration
 
-Your goal is to design and create a simple Calendar in Java, and implement the following method:
+### Prerequisites
+- Java 16 or higher
+- Maven 3.6+
+-Internet connection (for downloading dependencies)
+- IDE with Lombok support recommended (IntelliJ IDEA with annotation processing enabled)
 
-List<LocalTime> findAvailableSlots(List<String> personList, Duration eventDuration);
+### Building the Project
+From the project root directory:
 
-Requirements:
-
-This calendar represents a single day, so to make things simple - events have only start and end times (no dates).
-
-The work day starts at 07:00 and ends at 19:00. Take that into consideration when finding available time slots.
-
-Don't forget to add tests as well.
-
-Example
-
-Attached is an example calendar file calendar.csv:
-
-Alice,"Morning meeting",08:00,09:30
-Alice,"Lunch with Jack",13:00,14:00
-Alice,"Yoga",16:00,17:00
-Jack,"Morning meeting",08:00,08:50
-Jack,"Sales call",09:00,09:40
-Jack,"Lunch with Alice",13:00,14:00
-Jack,"Yoga",16:00,17:00
-Bob,"Morning meeting",08:00,09:30
-Bob,"Morning meeting 2",09:30,09:40
-Bob,"Q3 review",10:00,11:30
-Bob,"Lunch and siesta",13:00,15:00
-Bob,"Yoga",16:00,17:00
-
-For this input, and for a meeting of 60 minutes which Alice, Jack & Bob should attend the following output is expected:
-
-Available slot: 07:00
-Available slot: 11:30
-Available slot: 15:00
-Available slot: 17:00
-
-Getting Started
-
-You will need Maven installed to run the commands below.
-
-You will have to run mvn clean install inside the directory to download and install required dependencies.
-
-We have created the application's entry point for you. The entry point file is src/main/java/io/gong/App.java.
-To execute the app, you can run mvn compile exec:java
-
-Overview and Design and Design
-
-We use a timeline-based (boolean-array) approach:
-
-Load events via Apache Commons CSV into PersonCalendar objects.
-
-Convert each person’s busy intervals into a 720‑minute boolean array (true = busy, false = free).
-
-Intersect all selected attendees’ arrays (logical AND over false = free).
-
-Scan the combined array for consecutive false spans of length ≥ desired duration; record the start times.
-
-┌─────────────────────────────────────────────────────────────────┐
-│                Work Day: 07:00 ─────────── 19:00               │
-│0        60        120 ...           660       720 (minutes)   │
-│┌───┐┌──────────────┐      ┌───────┐      ┌─────────────┐       │
-││   ││ Busy intervals│ free │ busy │      free intervals      │
-││   ││   marked in   │      │      │      marked in          │
-││...││ boolean array │      │...   │      boolean array       │
-│└───┘└──────────────┘      └───────┘      └─────────────┘       │
-└─────────────────────────────────────────────────────────────────┘
-
-Prerequisites
-
-JDK 1.8 or higher (Java 8+)
-
-Maven 3.6+
-
-Internet connection (to download Maven dependencies)
-
-Optional:
-
-IDE with Lombok support (e.g. IntelliJ with annotation processing enabled)
-
-Apache Commons CSV (pulled in via Maven)
-
-Building the Project
-
-From the project root:
-
-mvn clean compile
+`mvn clean install`
 
 This will:
+- Clean previous builds
+- Compile source code
+- Run annotation processing (Lombok)
+- Execute tests
+- Package the application
 
-Clean previous builds (clean)
+### Running the Application
+To run the application with a CSV file:
+'mvn compile exec:java -Dexec.args="/path/to/calendar.csv"'
 
-Compile source code, run Lombok annotation processing (compile)
+Example:
 
-Running the Application
+`mvn compile exec:java -Dexec.args="/Users/meravgilboa/Desktop/gong-takehome-assignment/src/main/resources/io/gong/calendar.csv"`
 
-By default, the entry point is io.gong.App, which expects a CSV file path:
+The application will:
 
-mvn exec:java -Dexec.mainClass=io.gong.App -Dexec.args="path/to/calendar.csv"
+1. Load calendar events from the provided CSV file
+2. Find all available 30-minute meeting slots for all people in the file
+3. Display the results (start times of available slots)
 
-It will:
 
-Load events from calendar.csv
+### Running Tests
+To run the test suite:
 
-Compute available slots for hard‑coded attendees and duration (customize in App.java)
+`mvn test`
 
-Print each available start time to the console
+This will execute all test cases covering:
+- CSV parsing
+- Event loading
+- Availability calculation with various meeting durations
+- Edge cases and boundary conditions
+- Different participant combinations
 
-Running Tests
+### Method Comparison: Interval Merge vs. Boolean Timeline
 
-We use JUnit 5 for unit tests under src/test/java.
+| Criterion | Interval Merge (Sweep Line) | Boolean Timeline (Implemented) |
+|-----------|------------------------------|--------------------------------|
+| **Approach** | Sort and merge each person's busy intervals | Represent 07:00-19:00 as 720-minute boolean arrays |
+| **Cognitive Load** | Higher: sorting, merging, intersection logic | Lower: array marking and bitwise AND |
+| **Implementation** | More complex with careful edge handling | Simpler with fewer edge cases |
+| **Feature Extensibility** | Harder to add constraints | Easy to inject rules via array masks |
+| **Granularity** | Arbitrary (minutes, seconds) | Fixed to resolution (minutes) |
+| **Memory Use** | O(n·m) (events-centric) | O(n·720) (per-person arrays) |
+| **Time Complexity** | O(n·m·log m + n·m) | O(n·m + n·T + T) where T=720 |
 
-To run all tests:
+#### Why Boolean Timeline?
+I chose the Boolean Timeline approach for:
+1. Simplicity: The implementation is straightforward with minimal edge cases
+2. Performance: Linear time complexity for queries with very low constant factors
+3. Maintainability: Code is easy to understand, test, and extend
+4. Practicality: For the given problem scope (single day, minute granularity), the fixed memory usage is acceptable
 
-mvn test
+While the Interval Merge approach might be more memory-efficient for sparse calendars with few events, the Boolean Timeline approach provides simpler code, easier reasoning about availability, and better support for additional business rules like preferred meeting times or blocked periods.
 
-This will:
+### Project Structure
 
-Compile test sources
-
-Execute the suite covering CSV parsing, edge cases, and availability logic
-
-Project Structure
-
-├── pom.xml                # Maven configuration
-├── src
-│   ├── main
-│   │   ├── java/io/gong/  # Application & service classes
-│   │   └── resources/     # Optional CSV resources
-│   └── test
-│       ├── java/io/gong/  # Unit tests
-│       └── resources/     # Test CSV files
-└── README.md
-
-Future Enhancements
-
-Support for variable work-day hours or time zones
-
-Sub-minute granularity (e.g. seconds) via a different resolution
-
-Dynamic updates: live insertion/removal of events
-
-UI or REST API for interactive querying
-
-Comparison: Methods Compared
-
-Methodology
-
-Interval Merge (Sweep Line)Sort and merge each person’s busy intervals, then intersect across participants to find common free gaps.
-
-Boolean TimelineMap 07:00–19:00 to a 720-element boolean array per person (true = busy). AND arrays to find mutual free minutes.
-
-Trade-offs
-
-Criterion
-
-Interval Merge
-
-Boolean Timeline
-
-Cognitive Load
-
-Higher: sorting, merging, intersection logic
-
-Lower: array marking and bitwise AND
-
-Implementation
-
-More complex, careful edge handling
-
-Simpler, fewer edge cases
-
-Feature Extensibility
-
-Harder to add constraints (e.g. custom breaks)
-
-Easy to inject rules via array masks
-
-Granularity
-
-Arbitrary (minutes, seconds, etc.)
-
-Fixed to resolution (e.g. minutes)
-
-Memory Use
-
-O(n·m) (events-centric)
-
-O(n·720) (per‐person arrays)
-
-Parallelism
-
-Limited
-
-Highly parallelizable (per-person ANDs)
-
-Complexity
-
-Let n = number of people, m = average events/person, T = 720 minutes, d = duration
-
-Interval Merge Time: O(n·m·log m + n·m) merges + intersections
-
-Interval Merge Space: O(n·m) for intervals
-
-Boolean Timeline Time: O(n·m_event + n·T + T) ≈ O(n·m + n·T)
-
-Boolean Timeline Space: O(n·T) for boolean arrays
-
-Why This Approach?
-
-Speed & Simplicity: Linear-time per query (O(n)) with very low constant factors.
-
-Maintainability: Lower cognitive load and easy testability.
-
-Scalability: Handles large numbers of participants and frequent queries efficiently.
-
-This foundation supports dynamic rules, real-time updates, and simple REST/GUI integrations.
-
+<img width="500" alt="צילום מסך 2025-05-10 ב-23 34 02" src="https://github.com/user-attachments/assets/4887166e-4bb3-4e70-b59a-065ba2408976" />
