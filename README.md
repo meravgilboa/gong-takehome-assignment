@@ -8,9 +8,6 @@ The Calendar Availability Service is a Java application that helps find availabl
 I implemented a Boolean Timeline approach that represents the workday (07:00-19:00) as a 720-minute timeline. For each person, a boolean array marks busy minutes as true. The system then performs logical operations across all participants' timelines to find common available slots.
 
 
-<img width="496" alt="צילום מסך 2025-05-10 ב-23 33 02" src="https://github.com/user-attachments/assets/9ead26f1-8019-4189-a1b6-b1fee9fee81b" />
-
-
 #### The service:
 Loads events from a CSV file into PersonCalendar objects
 Converts each person's events into a boolean array (true = busy, false = available)
@@ -83,6 +80,4 @@ I chose the Boolean Timeline approach for:
 
 While the Interval Merge approach might be more memory-efficient for sparse calendars with few events, the Boolean Timeline approach provides simpler code, easier reasoning about availability, and better support for additional business rules like preferred meeting times or blocked periods.
 
-### Project Structure
 
-<img width="500" alt="צילום מסך 2025-05-10 ב-23 34 02" src="https://github.com/user-attachments/assets/4887166e-4bb3-4e70-b59a-065ba2408976" />
