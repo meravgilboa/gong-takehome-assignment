@@ -27,7 +27,7 @@ public class CalendarService {
     /**
      * Loads calendar events from a CSV file in the classpath.
      *
-     * @param resourcePath Path to the CSV file within the classpath
+     * @param filePath Path to the CSV file within the classpath
      * @throws IOException If an I/O error occurs reading from the file
      */
     public void loadEvents(String filePath) throws IOException {
